@@ -1,14 +1,16 @@
 
+CXXFLAGS := -std=gnu++11 -Wall -Werror
+
 bitsy: bitsy.cc
-	${CXX} -g -O0 -Wall -Werror $< -o $@
+	${CXX} ${CXXFLAGS} -g -O0 $< -o $@
 
 # -m32 doesn't work for some reason
 small: bitsy.cc
-	${CXX} -DNDEBUG -Os -Wall -Werror $< -o $@
-	#strip $@
+	${CXX} ${CXXFLAGS} -m32 -DNDEBUG -DSMALL -Os $< -o $@ #-Xlinker link-script
+	#strip --strip-unneeded -R .comment -R .gnu.version -R .eh_frame_hdr -R .eh_frame $@
 
 fast: bitsy.cc
-	${CXX} -DNDEBUG -O2 -Wall -Werror $< -o $@
+	${CXX} ${CXXFLAGS} -g -DNDEBUG -O2 $< -o $@
 
 clean:
 	rm -f bitsy small fast
