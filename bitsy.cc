@@ -67,15 +67,14 @@ struct List
 
 enum
 	{
-	HEAP_SIZE=10000,
-	SYMBOL_TABLE_SIZE=1000,
-	SUNDRY_TABLE_SIZE=1000,
+	HEAP_SIZE         = 10000,
+	SYMBOL_TABLE_SIZE = 1000,
+	SUNDRY_TABLE_SIZE = 1000,
 	};
 
 Pair heap[HEAP_SIZE];
 Int num_pairs = 0;
 
-Pair &new_pair(Value car, Value cdr);
 Pair &new_pair(Value car, Value cdr)
 	{
 	Pair &result = heap[num_pairs++];
@@ -84,7 +83,6 @@ Pair &new_pair(Value car, Value cdr)
 	return result;
 	}
 
-
 const Pair &nil = new_pair(heap[0], heap[0]); // Pair zero
 
 static inline bool is_nil(const Value v)
@@ -92,14 +90,24 @@ static inline bool is_nil(const Value v)
 	return &nil == &(v.as_pair());
 	}
 
-Value car(Value parameters)
+static Value car(Value parameters)
 	{
 	return parameters.as_pair()._car;
 	}
 
-Value cdr(Value parameters)
+static Value cdr(Value parameters)
 	{
 	return parameters.as_pair()._cdr;
+	}
+
+static Value caar(Value parameters)
+	{
+	return car(car(parameters));
+	}
+
+static Value cadr(Value parameters)
+	{
+	return car(cdr(parameters));
 	}
 
 typedef Value (*Primitive_function)(Value parameters);
@@ -330,9 +338,8 @@ const Symbol &booleanP = new_symbol("boolean?", booleanP_primitive);
 
 Value eqP_primitive(Value parameters)
 	{
-	Pair &args = parameters.as_pair();
-	Value object1 = args._car;
-	Value object2 = args._cdr.as_pair()._car;
+	Value object1 = car(parameters);
+	Value object2 = cadr(parameters);
 	return BOOLEAN(object1.eq(object2));
 	}
 const Symbol &eqP = new_symbol("eq?", eqP_primitive);
@@ -341,9 +348,8 @@ const Symbol &eqP = new_symbol("eq?", eqP_primitive);
 
 Value equalP_primitive(Value parameters)
 	{
-	Pair &args = parameters.as_pair();
-	Value object1 = args._car;
-	Value object2 = args._cdr.as_pair()._car;
+	Value object1 = car(parameters);
+	Value object2 = cadr(parameters);
 	return BOOLEAN(object1.equal(object2));
 	}
 const Symbol &equalP = new_symbol("equal?", equalP_primitive);
@@ -388,8 +394,9 @@ const Symbol &nullP = new_symbol("null?", nullP_primitive);
 
 Value cons_primitive(Value parameters)
 	{
-	Pair &args = parameters.as_pair();
-	return new_pair(args._car, args._cdr.as_pair()._car);
+	Value the_car = car(parameters);
+	Value the_cdr = cadr(parameters);
+	return new_pair(the_car, the_cdr);
 	}
 const Symbol &cons = new_symbol("cons", cons_primitive);
 
@@ -411,8 +418,8 @@ Value lookup_impl(const Environment *env, const Pair &bindings, Value key)
 	{
 	if (is_nil(bindings))
 		return lookup(env->_outer, key);
-	else if (bindings._car.as_pair()._car.eq(key))
-		return bindings._car.as_pair()._cdr;
+	else if (caar(bindings).eq(key))
+		return cadr(bindings);
 	else
 		return lookup_impl(env, bindings._cdr.as_pair(), key);
 	}
