@@ -1,6 +1,6 @@
 
 bitsy: bitsy.go
-	gccgo $< -g -o $@
+	gccgo $< -g -Os -o $@
 
 clean:
 	rm -f bitsy
